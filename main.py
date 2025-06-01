@@ -1,0 +1,110 @@
+import os
+from typing import Dict
+
+import hydra
+from omegaconf import DictConfig, OmegaConf
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+
+from src.dataset import load_dataset
+from src.evaluate import evaluate
+from src.features import create_modular_pipeline
+from src.globals import logger
+from src.preprocessor import Preprocessor
+from src.saver import Saver
+from src.training import train_RandomizedSearchCV
+
+
+@hydra.main(config_path=".", config_name="config", version_base=None)
+def main(cfg: DictConfig) -> None:
+    ############################## 1. Load Training Data ##############################
+    logger.info("1. Load Training Data")
+    # training data path
+    train_path = os.path.join(
+        cfg["paths"]["data"]["raw_data"],
+        cfg["names"]["train_data"],
+    )
+    train_df = load_dataset(train_path)
+    print(f"Training data shape: {train_df.shape}")
+
+    ############################## 2. apply Feature engineering ##############################
+    logger.info("2. apply Feature engineering")
+    feature_pipeline = create_modular_pipeline()
+
+    feature_engineered_train = feature_pipeline.fit_transform(train_df)
+    print(f"Feature engineered training data shape: {feature_engineered_train.shape}")
+    Saver.save_dataset_csv(
+        dataset=feature_engineered_train,
+        file_path=cfg["paths"]["data"]["interim_data"],
+        file_name=cfg["names"]["train_data"],
+    )
+
+    ############################## 3. split data ##############################
+    logger.info("3. split data")
+    X_train, X_val, y_train, y_val = train_test_split(
+        feature_engineered_train.drop(columns=cfg["dataset"]["target_col"]),
+        feature_engineered_train[cfg["dataset"]["target_col"]],
+        test_size=cfg["dataset"]["test_size"],
+        random_state=cfg["dataset"]["random_state"],
+    )
+
+    # ######################## 4. Preprocessing ##############################
+    logger.info("4. Preprocessing")
+    pipeline_config: Dict = OmegaConf.to_container(cfg["pipeline_config"], resolve=True)
+    preprocessor_pipeline = Preprocessor(pipeline_config)
+
+    X_processed_train = preprocessor_pipeline.fit_transform(X_train)
+    y_processed_train = y_train.values
+    print(f"Processed training data shape: {X_processed_train.shape}")
+    Saver.save_dataset_npy(
+        dataset=X_processed_train,
+        file_path=cfg["paths"]["data"]["processed_data"],
+        file_name=cfg["names"]["train_data"],
+    )
+    Saver.save_dataset_npy(
+        dataset=y_processed_train,
+        file_path=cfg["paths"]["data"]["processed_data"],
+        file_name=cfg["names"]["target_name"],
+    )
+
+    ########################## 5. Train Model ##############################
+    logger.info("5. Train Model")
+    model = RandomForestClassifier(
+        **OmegaConf.to_container(cfg["hyperparameters"]["random_forest"], resolve=True),
+    )
+
+    model, best_params = train_RandomizedSearchCV(model, cfg, X_processed_train, y_processed_train)
+
+    ########################## 5. save model ##############################
+    logger.info("6. save model")
+    full_pipeline = Pipeline(
+        steps=[
+            ("feature_engineering", feature_pipeline),
+            ("preprocessor", preprocessor_pipeline.get_pipeline()),
+            ("model", model),
+        ]
+    )
+    Saver.save_model(
+        full_pipeline,
+        model_path= cfg["paths"]["models_parent_dir"],
+        model_name=f"{cfg['names']['model_name']}.pkl")
+
+    ############################ 7. evaluate Model ##############################
+    logger.info("7. evaluate Model")
+    X_processed_val = preprocessor_pipeline.transform(X_val)
+    y_processed_val = y_val.values    
+    Saver.save_dataset_npy(
+        dataset=X_processed_val,
+        file_path=cfg["paths"]["data"]["processed_data"],
+        file_name=cfg["names"]["val_data"],
+    )
+    Saver.save_dataset_npy(
+        dataset=y_processed_val,
+        file_path=cfg["paths"]["data"]["processed_data"],
+        file_name=cfg["names"]["target_name"],
+    )
+    evaluate(cfg=cfg, final_model=model, X_test=X_processed_val, y_test=y_processed_val)
+
+if __name__ == "__main__":
+    main()
