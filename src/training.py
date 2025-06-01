@@ -1,10 +1,11 @@
+from typing import Dict, Tuple
+
 import numpy as np
 from omegaconf import DictConfig, OmegaConf
-import pandas as pd
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import RandomizedSearchCV
 
-from globals import logger
+from src.globals import logger
 
 
 def train(model: BaseEstimator, X_train: np.ndarray, y_train: np.ndarray) -> None:
@@ -21,9 +22,9 @@ def train(model: BaseEstimator, X_train: np.ndarray, y_train: np.ndarray) -> Non
 def train_RandomizedSearchCV(
     model: BaseEstimator,
     cfg: DictConfig,
-    X_train: pd.DataFrame,
-    y_train: pd.Series,
-) -> None:
+    X_train: np.ndarray,
+    y_train: np.ndarray,
+) -> Tuple[BaseEstimator,Dict]:
     """
     Perform Randomized Search CV on the model.
     """
@@ -41,4 +42,4 @@ def train_RandomizedSearchCV(
     logger.info(f"Best score: {search.best_score_}")
 
     logger.success("Randomized Search CV completed.")
-    return search.best_estimator_
+    return search.best_estimator_, search.best_params_

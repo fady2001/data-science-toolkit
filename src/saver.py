@@ -1,55 +1,55 @@
 import os
+from pathlib import Path
 import pickle
 
 import numpy as np
 import pandas as pd
 
-from dataset.dataset import Dataset
-from dataset.preprocessor import Preprocessor
-from globals import logger
+# from dataset.dataset import Dataset
+# from dataset.preprocessor import Preprocessor
+from src.globals import logger
 
 
 class Saver:
     @staticmethod
-    def save_processed_data(
-        X: np.ndarray,
-        y: np.ndarray,
-        target_col: str,
-        processor: Preprocessor,
-        filename: str,
-        dir: str,
-    ):
-        """
-        Save the processed data to a CSV file.
-        """
-        if os.path.exists(dir) is False:
-            os.makedirs(dir)
-        filepath = os.path.join(dir, filename)
-        processed_df = pd.DataFrame(X, columns=processor.get_feature_names_from_preprocessor())
-        processed_df[target_col] = y
-        processed_df.to_csv(filepath, index=False)
-        logger.success(f"Processed data saved to {filepath}.")
-
-    @staticmethod
-    def save_dataset(dataset: Dataset, filename: str, dir: str) -> None:
+    def save_dataset_csv(dataset: pd.DataFrame, file_path: Path, file_name:str) -> None:
         """
         Save the dataset to the specified directory.
         """
+        if os.path.exists(file_path) is False:
+            os.makedirs(file_path)
+        file_path = Path(file_path) / f"{file_name}.csv"
+        dataset.to_csv(file_path, sep=",")
+        logger.success(f"Dataset saved to {file_path}.")
+        
+    def save_dataset_parquet(dataset: pd.DataFrame, file_path: Path) -> None:
+        """
+        Save the dataset to the specified directory in Parquet format.
+        """
         if os.path.exists(dir) is False:
             os.makedirs(dir)
-        filepath = os.path.join(dir, filename)
-        dataset.get().to_csv(filepath, sep=",")
-        logger.success(f"Dataset saved to {filepath}.")
+        dataset.to_parquet(file_path,engine='pyarrow')
+        logger.success(f"Dataset saved to {file_path}.")
+        
+    def save_dataset_npy(dataset: np.ndarray, file_path: Path, file_name:str) -> None:
+        """
+        Save the dataset to the specified directory in NPY format.
+        """
+        if os.path.exists(file_path) is False:
+            os.makedirs(file_path)
+        file_path = Path(file_path) / f"{file_name}.npy"
+        np.save(file_path, dataset)
+        logger.success(f"Dataset saved to {file_path}.")
 
     @staticmethod
-    def save_model(model, model_name: str, dir: str) -> None:
+    def save_model(model, model_path: Path, model_name:str) -> None:
         """
         Save the model to the specified directory.
         """
-        if os.path.exists(dir) is False:
-            os.makedirs(dir)
-        filepath = os.path.join(dir, f"{model_name}.pkl")
-        with open(filepath, "wb") as f:
+        if os.path.exists(model_path) is False:
+            os.makedirs(model_path)
+        model_path = Path(model_path) / f"{model_name}.pkl"
+        with open(model_path, "wb") as f:
             pickle.dump(model, f)
 
-        logger.success(f"Model saved to {filepath}.")
+        logger.success(f"Model saved to {model_path}.")

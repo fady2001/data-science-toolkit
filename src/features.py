@@ -82,7 +82,8 @@ class FareFeatures(BaseEstimator, TransformerMixin):
         X = X.copy()
         # Fare per person (requires FamilySize from previous transformer)
         X["FarePerPerson"] = X["Fare"] / X["FamilySize"]
-        X["FarePerPerson"].replace([np.inf, -np.inf], np.nan, inplace=True)
+        X.replace({"FarePerPerson": {np.inf: np.nan, -np.inf: np.nan}}, inplace=True)
+        
         return X
 
 
@@ -164,25 +165,6 @@ class TitanicFeatureEngineer(BaseEstimator, TransformerMixin):
     
     def fit_transform(self, X, y=None):
         return self.fit(X, y).transform(X)
-
-
-# Convenience function to maintain backward compatibility
-def extract_features(df: pd.DataFrame, target_col: str = "Survived") -> pd.DataFrame:
-    """
-    Legacy function for backward compatibility.
-    Uses the new transformer-based approach.
-    """
-    engineer = TitanicFeatureEngineer()
-    transformed_df = engineer.fit_transform(df)
-    return transformed_df
-
-
-# Example usage and pipeline creation
-def create_feature_pipeline() -> Pipeline:
-    """Create a complete feature engineering pipeline"""
-    return Pipeline([
-        ('feature_engineer', TitanicFeatureEngineer()),
-    ])
 
 
 def create_modular_pipeline() -> Pipeline:

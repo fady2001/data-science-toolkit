@@ -4,15 +4,16 @@ paths:
   reports_parent_dir: reports
   figures_parent_dir: figures
   data:
-    raw_data: ${pipeline.paths.data_parent_dir}/raw
-    interim_data: ${pipeline.paths.data_parent_dir}/interim
-    processed_data: ${pipeline.paths.data_parent_dir}/processed
-    external_data: ${pipeline.paths.data_parent_dir}/external
+    raw_data: ${paths.data_parent_dir}/raw
+    interim_data: ${paths.data_parent_dir}/interim
+    processed_data: ${paths.data_parent_dir}/processed
+    external_data: ${paths.data_parent_dir}/external
 
 dataset:
   target_col: "Survived"
   id_col: "PassengerId"
   test_size: 0.2
+  random_state: 42
 
 names:
   train_data: "train.csv"
@@ -20,6 +21,7 @@ names:
   val_data: "val.csv"
   model_name: "random_forest"
   submission_name: "submission.csv"
+  target_name: "target"
 
 hyperparameters:
   random_forest:
