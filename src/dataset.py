@@ -1,7 +1,8 @@
 from pathlib import Path
 
-from globals import logger
 import pandas as pd
+
+from globals import logger
 
 
 def load_dataset(file_path: Path) -> pd.DataFrame:
