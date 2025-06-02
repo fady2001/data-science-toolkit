@@ -229,6 +229,11 @@ async def predict_batch(
     logger.info(f"Batch prediction request received for {len(request.passengers)} passengers")
     return inference_service.predict_batch(request)
 
+@app.get("/openapi.json", include_in_schema=False)
+async def get_openapi(
+    authenticated: bool = Depends(inference_service.verify_api_key)):
+    """Custom OpenAPI schema endpoint"""
+    return app.openapi()
 
 if __name__ == "__main__":
     import uvicorn
