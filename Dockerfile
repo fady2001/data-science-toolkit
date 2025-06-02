@@ -18,6 +18,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 ENV PATH="/app/.venv/bin:$PATH"
 ENTRYPOINT []
 
-CMD sh -c "uvicorn src.inference:app --host 0.0.0.0 --port $PORT"
+CMD sh -c "uvicorn inference:app --host 0.0.0.0 --port $PORT"
 
 EXPOSE ${PORT}

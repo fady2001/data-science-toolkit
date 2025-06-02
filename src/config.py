@@ -1,3 +1,10 @@
+"""
+Configuration module for the data science toolkit.
+
+This module defines project paths, constants, and environment configuration.
+It sets up the project directory structure and configures logging with tqdm support.
+"""
+
 from pathlib import Path
 
 from dotenv import load_dotenv

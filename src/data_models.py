@@ -1,3 +1,11 @@
+"""
+Pydantic data models for API requests and responses.
+
+This module defines the data validation models used for the prediction API,
+including request/response models for single and batch predictions, with
+proper field validation and type checking.
+"""
+
 from datetime import datetime
 from typing import List, Optional
 
@@ -21,12 +29,14 @@ class PredictionRequest(BaseModel):
 
     @field_validator("Sex")
     def validate_sex(cls, v):
+        """Validate that sex is either 'male' or 'female'."""
         if v.lower() not in ["male", "female"]:
             raise ValueError('Sex must be either "male" or "female"')
         return v.lower()
 
     @field_validator("Embarked")
     def validate_embarked(cls, v):
+        """Validate that embarked port is one of C, Q, or S."""
         if v is not None and v.upper() not in ["C", "Q", "S"]:
             raise ValueError("Embarked must be one of: C, Q, S")
         return v.upper() if v else None

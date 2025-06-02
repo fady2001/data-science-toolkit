@@ -1,3 +1,11 @@
+"""
+Model training utilities and hyperparameter tuning.
+
+This module provides functions for training machine learning models and performing
+hyperparameter optimization using RandomizedSearchCV. It includes comprehensive
+logging and error handling for the training process.
+"""
+
 from typing import Dict, Tuple
 
 import numpy as np
@@ -10,7 +18,18 @@ from src.globals import logger
 
 def train(model: BaseEstimator, X_train: np.ndarray, y_train: np.ndarray) -> None:
     """
-    Train the model.
+    Train a machine learning model with the provided training data.
+
+    Args:
+        model (BaseEstimator): Scikit-learn compatible model to train
+        X_train (np.ndarray): Training features
+        y_train (np.ndarray): Training target values
+
+    Returns:
+        None
+
+    Raises:
+        ValueError: If model is None
     """
     if model is None:
         logger.error("Model is None.")
@@ -24,9 +43,24 @@ def train_RandomizedSearchCV(
     cfg: DictConfig,
     X_train: np.ndarray,
     y_train: np.ndarray,
-) -> Tuple[BaseEstimator,Dict]:
+) -> Tuple[BaseEstimator, Dict]:
     """
-    Perform Randomized Search CV on the model.
+    Perform hyperparameter tuning using RandomizedSearchCV.
+
+    Uses the configuration to define the parameter search space and performs
+    randomized search with cross-validation to find the best hyperparameters.
+
+    Args:
+        model (BaseEstimator): Scikit-learn compatible model to tune
+        cfg (DictConfig): Configuration containing tuning parameters
+        X_train (np.ndarray): Training features
+        y_train (np.ndarray): Training target values
+
+    Returns:
+        Tuple[BaseEstimator, Dict]: Best estimator and best parameters found
+
+    Raises:
+        ValueError: If model is None
     """
     if model is None:
         logger.error("Model is None.")

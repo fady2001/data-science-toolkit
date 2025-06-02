@@ -1,3 +1,11 @@
+"""
+Data preprocessing utilities and pipeline construction.
+
+This module provides a flexible preprocessor class that can handle various
+preprocessing steps including encoding, scaling, and imputation based on
+configuration. It uses scikit-learn's ColumnTransformer for efficient
+column-wise transformations.
+"""
 from typing import Dict, List, Tuple
 
 import numpy as np
@@ -16,13 +24,36 @@ from sklearn.preprocessing import (
 
 
 class Preprocessor:
+    """
+    A flexible data preprocessor that applies various transformations based on configuration.
+
+    This class creates a scikit-learn pipeline with encoding, scaling, and imputation
+    steps applied to different columns based on the provided configuration.
+    """
+
     def __init__(
         self,
         pipeline_config: Dict[str, str] = None,
     ):
+        """
+        Initialize the preprocessor with configuration.
+
+        Args:
+            pipeline_config (Dict[str, str], optional): Configuration dictionary
+                specifying preprocessing steps for different columns
+        """
         self.pipeline_config = pipeline_config or {}
 
     def fit(self, X: pd.DataFrame) -> "Preprocessor":
+        """
+        Fit the preprocessing pipeline to the training data.
+
+        Args:
+            X (pd.DataFrame): Training features
+
+        Returns:
+            Preprocessor: Returns self for method chaining
+        """
         transformers = []
 
         transformers.append(("drop_columns", "drop", self.pipeline_config.get("drop", [])))
@@ -36,20 +67,56 @@ class Preprocessor:
         return self
 
     def transform(self, X: pd.DataFrame) -> np.ndarray:
+        """
+        Transform the input data using the fitted pipeline.
+
+        Args:
+            X (pd.DataFrame): Input features to transform
+
+        Returns:
+            np.ndarray: Transformed features
+
+        Raises:
+            ValueError: If pipeline is not fitted
+        """
         if self.pipeline is None:
             raise ValueError("Pipeline not fitted. Call fit() before transform().")
         return self.pipeline.transform(X)
 
     def fit_transform(self, X: pd.DataFrame) -> np.ndarray:
+        """
+        Fit the pipeline and transform the data in one step.
+
+        Args:
+            X (pd.DataFrame): Input features
+
+        Returns:
+            np.ndarray: Transformed features
+        """
         self.fit(X)
         return self.pipeline.fit_transform(X)
 
     def get_pipeline(self) -> ColumnTransformer:
+        """
+        Get the fitted scikit-learn pipeline.
+
+        Returns:
+            ColumnTransformer: The fitted preprocessing pipeline
+
+        Raises:
+            ValueError: If pipeline is not fitted
+        """
         if self.pipeline is None:
             raise ValueError("Pipeline not fitted. Call fit() before get_pipeline().")
         return self.pipeline
 
     def __create_encode_steps(self) -> List[Tuple[str, BaseEstimator, List[str]]]:
+        """
+        Create encoding transformation steps based on configuration.
+
+        Returns:
+            List[Tuple[str, BaseEstimator, List[str]]]: List of encoding transformers
+        """
         encode_steps = []
         if self.pipeline_config.get("encoding"):
             for strategy in self.pipeline_config["encoding"].keys():
@@ -79,6 +146,12 @@ class Preprocessor:
         return encode_steps
 
     def __create_scaling_steps(self) -> List[Tuple[str, BaseEstimator, List[str]]]:
+        """
+        Create scaling transformation steps based on configuration.
+
+        Returns:
+            List[Tuple[str, BaseEstimator, List[str]]]: List of scaling transformers
+        """
         scaling_steps = []
         if self.pipeline_config.get("scaling"):
             for strategy in self.pipeline_config["scaling"].keys():
@@ -94,6 +167,12 @@ class Preprocessor:
         return scaling_steps
 
     def __create_imputing_steps(self) -> List[Tuple[str, BaseEstimator, List[str]]]:
+        """
+        Create imputation transformation steps based on configuration.
+
+        Returns:
+            List[Tuple[str, BaseEstimator, List[str]]]: List of imputation transformers
+        """
         imputing_steps = []
         if self.pipeline_config.get("imputation"):
             for strategy in self.pipeline_config["imputation"].keys():
@@ -134,11 +213,8 @@ class Preprocessor:
         """
         Extract feature names from a ColumnTransformer after encoding.
 
-        Parameters:
-        - preprocessor: The fitted ColumnTransformer object.
-
         Returns:
-        - A list of feature names.
+            List[str]: A list of feature names from the fitted pipeline
         """
         feature_names = []
         for name, transformer, columns in self.pipeline.transformers_:

@@ -1,3 +1,11 @@
+"""
+FastAPI inference service for Titanic survival prediction.
+
+This module provides a REST API service for making predictions using the trained
+Titanic survival model. It includes authentication, health checks, single and batch
+prediction endpoints, with comprehensive logging and error handling.
+"""
+
 from datetime import datetime
 import os
 import pickle
@@ -25,6 +33,12 @@ class InferenceService:
     """Inference service for the Titanic survival prediction model"""
 
     def __init__(self, cfg: DictConfig):
+        """
+        Initialize the inference service.
+
+        Args:
+            cfg (DictConfig): Configuration object containing model paths and settings
+        """
         self.cfg = cfg
         self.model: BaseEstimator = None
         self.model_loaded = False
@@ -84,7 +98,15 @@ class InferenceService:
         return True
 
     def _prepare_input_data(self, request: PredictionRequest) -> pd.DataFrame:
-        """Convert request to DataFrame for prediction"""
+        """
+        Convert request to DataFrame for prediction.
+
+        Args:
+            request (PredictionRequest): Input prediction request
+
+        Returns:
+            pd.DataFrame: Formatted DataFrame ready for model prediction
+        """
         data = {
             "PassengerId": request.PassengerId or 0,
             "Pclass": request.Pclass,
@@ -113,7 +135,7 @@ class InferenceService:
         try:
             # Prepare input data
             df = self._prepare_input_data(request)
-            
+
             # Make prediction
             prediction = self.model.predict(df)
 
@@ -173,6 +195,7 @@ class InferenceService:
                 detail=f"Batch prediction failed: {str(e)}",
             )
 
+
 cfg = OmegaConf.load("config.yaml")
 inference_service = InferenceService(cfg=cfg)
 
@@ -228,19 +251,16 @@ async def predict_batch(
     logger.info(f"Batch prediction request received for {len(request.passengers)} passengers")
     return inference_service.predict_batch(request)
 
+
 @app.get("/openapi.json", include_in_schema=False)
 async def get_openapi(
-    authenticated: bool = Depends(inference_service.verify_api_key)):
+    authenticated: bool = Depends(inference_service.verify_api_key)
+):
     """Custom OpenAPI schema endpoint"""
     return app.openapi()
 
+
 if __name__ == "__main__":
     import uvicorn
-
-    # Set API key from environment or use default
-    if "API_KEY" not in os.environ:
-        logger.warning("API_KEY not set in environment, using default key")
-        os.environ["API_KEY"] = "your-secret-api-key-here"
-
     logger.info("Starting FastAPI inference server...")
-    uvicorn.run("src.inference:app", host="0.0.0.0", port=8000, reload=False, log_level="info")
+    uvicorn.run("inference:app", host="0.0.0.0", port=8000, reload=False, log_level="info")

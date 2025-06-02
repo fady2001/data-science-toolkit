@@ -1,3 +1,11 @@
+"""
+Custom logging utilities using Loguru library.
+
+This module provides a customizable logging interface that supports both console
+and file logging with different formats and log levels. It uses the Loguru library
+for enhanced logging capabilities with features like rotation and colored output.
+"""
+
 from datetime import datetime
 from pathlib import Path
 import sys
