@@ -10,7 +10,6 @@ from src.globals import logger
 
 
 def evaluate(cfg: DictConfig, final_model:BaseEstimator,X_test:np.ndarray,y_test:np.ndarray) -> None:
-    logger.info("loading model")
     
     final_report = EstimatorReport(final_model, X_test=X_test, y_test=y_test)
     logger.info("creating evaluation report")
