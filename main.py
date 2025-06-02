@@ -2,6 +2,7 @@ import os
 from typing import Dict
 
 import hydra
+import mlflow
 from omegaconf import DictConfig, OmegaConf
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
@@ -13,6 +14,7 @@ from src.features import create_modular_pipeline
 from src.globals import logger
 from src.preprocessor import Preprocessor
 from src.saver import Saver
+from src.tracking import log_and_register_model_with_mlflow, move_model_to_prod
 from src.training import train_RandomizedSearchCV
 
 
@@ -76,7 +78,7 @@ def main(cfg: DictConfig) -> None:
 
     model, best_params = train_RandomizedSearchCV(model, cfg, X_processed_train, y_processed_train)
 
-    ########################## 5. save model ##############################
+    ########################## 6. save model ##############################
     logger.info("6. save model")
     full_pipeline = Pipeline(
         steps=[
@@ -89,9 +91,26 @@ def main(cfg: DictConfig) -> None:
         full_pipeline,
         model_path= cfg["paths"]["models_parent_dir"],
         model_name=f"{cfg['names']['model_name']}.pkl")
+    
+    ########################### 7. experiment tracking ##############################
+    logger.info("7. experiment tracking")
+    if cfg["mlflow"]['is_tracking_enabled']:
+        mlflow.set_tracking_uri(cfg["mlflow"]["tracking_uri"])
+        client = mlflow.tracking.MlflowClient()
+        model_details, run_id = log_and_register_model_with_mlflow(
+            final_model=full_pipeline,
+            test_df=train_df,
+            cfg=cfg,
+            params=best_params,
+        )
 
-    ############################ 7. evaluate Model ##############################
-    logger.info("7. evaluate Model")
+        move_model_to_prod(
+            client=client,
+            model_details=model_details,
+        )
+
+    ############################ 8. evaluate Model ##############################
+    logger.info("8. evaluate Model")
     X_processed_val = preprocessor_pipeline.transform(X_val)
     y_processed_val = y_val.values    
     Saver.save_dataset_npy(

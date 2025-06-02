@@ -1,0 +1,15 @@
+artifact_uri: mlflow-artifacts:/509309430285857086/d8685fa9fd8c4b718fa32fa2be47d1ea/artifacts
+end_time: 1748822413883
+entry_point_name: ''
+experiment_id: '509309430285857086'
+lifecycle_stage: active
+run_id: d8685fa9fd8c4b718fa32fa2be47d1ea
+run_name: rare-dolphin-914
+run_uuid: d8685fa9fd8c4b718fa32fa2be47d1ea
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1748822392702
+status: 3
+tags: []
+user_id: Fady Adel
