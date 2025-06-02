@@ -33,7 +33,6 @@ class InferenceService:
         # Authentication
         load_dotenv()
         self.api_key = os.getenv("API_KEY")
-        logger.error(f"API_KEY: {self.api_key[:10]}...")  # Log only part of the key for security
 
         logger.info("Inference service initialized")
 
