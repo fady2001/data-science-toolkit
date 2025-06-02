@@ -76,3 +76,7 @@ pipeline_config:
       - Embarked
       - Deck
       - Title
+mlflow:
+  experiment_name: "titanic_experiment"
+  tracking_uri: "http://localhost:8080"
+  is_tracking_enabled: true
