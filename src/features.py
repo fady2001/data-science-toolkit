@@ -3,7 +3,6 @@ import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
 
-# Individual transformers for each feature engineering step
 
 class TitleExtractor(BaseEstimator, TransformerMixin):
     """Extract and clean title from Name column"""
