@@ -16,11 +16,11 @@ dataset:
   random_state: 42
 
 names:
-  train_data: "train.csv"
-  test_data: "test.csv"
-  val_data: "val.csv"
+  train_data: "train"
+  test_data: "test"
+  val_data: "val"
   model_name: "random_forest"
-  submission_name: "submission.csv"
+  submission_name: "submission"
   target_name: "target"
 
 hyperparameters:
@@ -79,4 +79,4 @@ pipeline_config:
 mlflow:
   experiment_name: "titanic_experiment"
   tracking_uri: "http://localhost:8080"
-  is_tracking_enabled: true
+  is_tracking_enabled: false

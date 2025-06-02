@@ -25,7 +25,7 @@ def main(cfg: DictConfig) -> None:
     # training data path
     train_path = os.path.join(
         cfg["paths"]["data"]["raw_data"],
-        cfg["names"]["train_data"],
+        f"{cfg['names']['train_data']}.csv"
     )
     train_df = load_dataset(train_path)
     print(f"Training data shape: {train_df.shape}")
@@ -39,7 +39,8 @@ def main(cfg: DictConfig) -> None:
     Saver.save_dataset_csv(
         dataset=feature_engineered_train,
         file_path=cfg["paths"]["data"]["interim_data"],
-        file_name=cfg["names"]["train_data"],
+        file_name=f"{cfg['names']['train_data']}.csv"
+,
     )
 
     ############################## 3. split data ##############################
@@ -90,7 +91,7 @@ def main(cfg: DictConfig) -> None:
     Saver.save_model(
         full_pipeline,
         model_path= cfg["paths"]["models_parent_dir"],
-        model_name=f"{cfg['names']['model_name']}.pkl")
+        model_name=cfg['names']['model_name'])
     
     ########################### 7. experiment tracking ##############################
     logger.info("7. experiment tracking")
