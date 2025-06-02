@@ -1,3 +1,10 @@
+"""
+Dataset loading and handling utilities.
+
+This module provides functions for loading datasets from various file formats,
+particularly CSV files, with proper error handling and logging.
+"""
+
 from pathlib import Path
 
 import pandas as pd

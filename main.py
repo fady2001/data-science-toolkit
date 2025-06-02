@@ -1,3 +1,12 @@
+"""
+Main entry point for the data science toolkit training pipeline.
+
+This module orchestrates the complete machine learning pipeline including data loading,
+feature engineering, preprocessing, model training, evaluation, and tracking using Hydra
+for configuration management. It supports both basic training and hyperparameter tuning
+with MLflow integration for experiment tracking.
+"""
+
 import os
 from typing import Dict
 
@@ -20,6 +29,25 @@ from src.training import train, train_RandomizedSearchCV
 
 @hydra.main(config_path=".", config_name="config", version_base=None)
 def main(cfg: DictConfig) -> None:
+    """
+    Main training pipeline function.
+
+    Orchestrates the complete machine learning workflow including:
+    1. Loading training data
+    2. Feature engineering
+    3. Data splitting
+    4. Preprocessing
+    5. Model training with hyperparameter tuning
+    6. Model saving
+    7. Experiment tracking with MLflow
+    8. Model evaluation
+
+    Args:
+        cfg (DictConfig): Hydra configuration object containing all pipeline parameters
+
+    Returns:
+        None
+    """
     ############################## 1. Load Training Data ##############################
     logger.info("1. Load Training Data")
     # training data path

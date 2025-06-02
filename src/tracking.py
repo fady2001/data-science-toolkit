@@ -1,3 +1,10 @@
+"""
+MLflow experiment tracking and model registry utilities.
+
+This module provides functions for logging experiments, registering models,
+and managing model lifecycle stages using MLflow. It handles model signatures,
+metrics logging, and model promotion to production stages.
+"""
 import mlflow
 from mlflow.models.signature import infer_signature
 import mlflow.sklearn
@@ -8,18 +15,20 @@ from src.globals import logger
 
 def log_and_register_model_with_mlflow(final_model, test_df, cfg, params):
     """
-    Logs and registers a model with MLflow.
+    Log and register a trained model with MLflow tracking and model registry.
+
+    This function logs the model, parameters, and metrics to MLflow, infers the model
+    signature, and registers the model in the MLflow model registry for deployment.
 
     Args:
-        final_model: Trained model used for inference.
-        X: Features used to infer model signature.
-        cfg: Configuration dictionary with model paths and names.
-        params: Dictionary of parameters to log.
-        ModelWrapper: A custom wrapper class for the model.
-        logger: Logger instance for info messages.
+        final_model: Trained scikit-learn model to be logged and registered
+        test_df: Test dataset used for model evaluation and signature inference
+        cfg: Configuration dictionary containing MLflow settings, paths, and model names
+        params: Dictionary of hyperparameters and training parameters to log
 
     Returns:
-        Tuple containing the registered model details and run ID.
+        Tuple[mlflow.entities.model_registry.ModelVersion, str]: 
+            A tuple containing the registered model details and the MLflow run ID
     """
     # to remove warning of representing np.nan
     integer_columns = test_df.select_dtypes(include=["int"]).columns
@@ -66,6 +75,18 @@ def log_and_register_model_with_mlflow(final_model, test_df, cfg, params):
 
 
 def reformat_metrics(metrics):
+    """
+    Reformat nested metrics dictionary for MLflow logging.
+    
+    Flattens nested dictionaries by combining keys with underscores,
+    making them suitable for MLflow's flat metrics structure.
+    
+    Args:
+        metrics (dict): Dictionary of metrics that may contain nested dictionaries
+        
+    Returns:
+        dict: Flattened dictionary with reformatted metric names
+    """
     reformatted_metrics = dict()
     for metric, value in metrics.items():
         if isinstance(value, dict):
@@ -77,6 +98,19 @@ def reformat_metrics(metrics):
 
 
 def move_model_to_prod(client: mlflow.client.MlflowClient, model_details) -> None:
+    """
+    Transition a model version to production stage in MLflow model registry.
+    
+    Moves the specified model version to the "production" stage and adds
+    a production tag for easy identification.
+    
+    Args:
+        client (mlflow.client.MlflowClient): MLflow client for model registry operations
+        model_details: Model version details from MLflow registration
+        
+    Returns:
+        None
+    """
     client.transition_model_version_stage(
         name=model_details.name,
         version=model_details.version,

@@ -1,3 +1,10 @@
+"""
+Model evaluation utilities and metrics calculation.
+
+This module provides functions for evaluating trained machine learning models,
+generating performance reports, and saving evaluation results to JSON files.
+"""
+
 import json
 import os
 
@@ -9,8 +16,22 @@ from skore import EstimatorReport
 from src.globals import logger
 
 
-def evaluate(cfg: DictConfig, final_model:BaseEstimator,X_test:np.ndarray,y_test:np.ndarray) -> None:
-    
+def evaluate(cfg: DictConfig, final_model: BaseEstimator, X_test: np.ndarray, y_test: np.ndarray) -> None:
+    """
+    Evaluate a trained model and generate a comprehensive evaluation report.
+
+    Creates an evaluation report with various metrics including accuracy, precision,
+    recall, and timing information. Saves the report as a JSON file in the reports directory.
+
+    Args:
+        cfg (DictConfig): Hydra configuration object containing paths and model settings
+        final_model (BaseEstimator): Trained scikit-learn model to evaluate
+        X_test (np.ndarray): Test features
+        y_test (np.ndarray): Test target values
+
+    Returns:
+        None
+    """
     final_report = EstimatorReport(final_model, X_test=X_test, y_test=y_test)
     logger.info("creating evaluation report")
     evaluation_report = {
@@ -36,36 +57,3 @@ def evaluate(cfg: DictConfig, final_model:BaseEstimator,X_test:np.ndarray,y_test
         "w",
     ) as js:
         json.dump(evaluation_report, js, indent=4)
-
-
-# def generate_submission_file(cfg: DictConfig) -> None:
-#     logger.info("loading model")
-#     with open(
-#         os.path.join(
-#             cfg["paths"]["models_parent_dir"],
-#             cfg["names"]["model_name"],
-#             f"{cfg['names']['model_name']}.pkl",
-#         ),
-#         "rb",
-#     ) as pkl:
-#         final_model = pickle.load(pkl)
-
-#     test_data = Dataset(
-#         data=os.path.join(cfg["paths"]["data"]["raw_data"], cfg["names"]["test_data"]),
-#     )
-
-#     test_id = test_data.engineer_features()
-#     test_id = test_data.get()[cfg["dataset"]["id_col"]]
-
-#     logger.info("creating submission file")
-#     submission_df = pd.DataFrame()
-#     submission_df[cfg["dataset"]["id_col"]] = test_id
-#     submission_df[cfg["dataset"]["target_col"]] = final_model.predict(test_data.get())
-#     submission_df.to_csv(
-#         os.path.join(
-#             cfg["paths"]["models_parent_dir"],
-#             cfg["names"]["model_name"],
-#             cfg["names"]["submission_name"],
-#         ),
-#         index=False,
-#     )

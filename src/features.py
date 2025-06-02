@@ -1,3 +1,10 @@
+"""
+Feature engineering transformers and pipelines for the Titanic dataset.
+
+This module provides a comprehensive set of feature engineering transformers
+that can be used individually or combined in pipelines to extract meaningful
+features from the Titanic dataset for machine learning models.
+"""
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -8,6 +15,11 @@ class TitleExtractor(BaseEstimator, TransformerMixin):
     """Extract and clean title from Name column"""
     
     def __init__(self):
+        """
+        Initialize the TitleExtractor.
+        
+        Sets up mappings for rare titles and title variations.
+        """
         self.rare_titles = [
             "Lady", "Countess", "Capt", "Col", "Don", "Dr", 
             "Major", "Rev", "Sir", "Jonkheer", "Dona"
@@ -15,9 +27,28 @@ class TitleExtractor(BaseEstimator, TransformerMixin):
         self.title_mapping = {"Mlle": "Miss", "Ms": "Miss", "Mme": "Mrs"}
     
     def fit(self, X, y=None):
+        """
+        Fit the transformer (no-op for this transformer).
+        
+        Args:
+            X (pd.DataFrame): Input features
+            y (array-like, optional): Target values
+            
+        Returns:
+            self: Returns the instance itself
+        """
         return self
     
     def transform(self, X):
+        """
+        Extract titles from passenger names and standardize them.
+        
+        Args:
+            X (pd.DataFrame): Input features containing 'Name' column
+            
+        Returns:
+            pd.DataFrame: Features with added 'Title' column
+        """
         X = X.copy()
         # Extract title from Name
         X["Title"] = X["Name"].str.extract(" ([A-Za-z]+)\.", expand=False)
@@ -32,9 +63,28 @@ class FamilySizeFeatures(BaseEstimator, TransformerMixin):
     """Create family size related features"""
     
     def fit(self, X, y=None):
+        """
+        Fit the transformer (no-op for this transformer).
+        
+        Args:
+            X (pd.DataFrame): Input features
+            y (array-like, optional): Target values
+            
+        Returns:
+            self: Returns the instance itself
+        """
         return self
     
     def transform(self, X):
+        """
+        Create family size and alone indicator features.
+        
+        Args:
+            X (pd.DataFrame): Input features containing 'SibSp' and 'Parch' columns
+            
+        Returns:
+            pd.DataFrame: Features with added 'FamilySize' and 'IsAlone' columns
+        """
         X = X.copy()
         X["FamilySize"] = X["SibSp"] + X["Parch"] + 1
         X["IsAlone"] = (X["FamilySize"] == 1).astype(int)
@@ -45,9 +95,28 @@ class DeckExtractor(BaseEstimator, TransformerMixin):
     """Extract deck information from Cabin"""
     
     def fit(self, X, y=None):
+        """
+        Fit the transformer (no-op for this transformer).
+        
+        Args:
+            X (pd.DataFrame): Input features
+            y (array-like, optional): Target values
+            
+        Returns:
+            self: Returns the instance itself
+        """
         return self
     
     def transform(self, X):
+        """
+        Extract deck letter from cabin information.
+        
+        Args:
+            X (pd.DataFrame): Input features containing 'Cabin' column
+            
+        Returns:
+            pd.DataFrame: Features with added 'Deck' column
+        """
         X = X.copy()
         X["Deck"] = X["Cabin"].astype(str).str[0]
         X["Deck"] = X["Deck"].fillna("U")
@@ -58,12 +127,32 @@ class TicketFeatures(BaseEstimator, TransformerMixin):
     """Create ticket-related features"""
     
     def __init__(self):
+        """Initialize the TicketFeatures transformer."""
         self.ticket_counts_ = None
     
     def fit(self, X, y=None):
+        """
+        Fit the transformer (no-op for this transformer).
+        
+        Args:
+            X (pd.DataFrame): Input features
+            y (array-like, optional): Target values
+            
+        Returns:
+            self: Returns the instance itself
+        """
         return self
     
     def transform(self, X):
+        """
+        Create ticket group size features.
+        
+        Args:
+            X (pd.DataFrame): Input features containing 'Ticket' column
+            
+        Returns:
+            pd.DataFrame: Features with added 'TicketGroupSize' column
+        """
         X = X.copy()
         ticket_counts_ = X["Ticket"].value_counts().to_dict()
         # Use fitted ticket counts, default to 1 for unseen tickets
@@ -75,9 +164,28 @@ class FareFeatures(BaseEstimator, TransformerMixin):
     """Create fare-related features"""
     
     def fit(self, X, y=None):
+        """
+        Fit the transformer (no-op for this transformer).
+        
+        Args:
+            X (pd.DataFrame): Input features
+            y (array-like, optional): Target values
+            
+        Returns:
+            self: Returns the instance itself
+        """
         return self
     
     def transform(self, X):
+        """
+        Create fare per person feature.
+        
+        Args:
+            X (pd.DataFrame): Input features containing 'Fare' and 'FamilySize' columns
+            
+        Returns:
+            pd.DataFrame: Features with added 'FarePerPerson' column
+        """
         X = X.copy()
         # Fare per person (requires FamilySize from previous transformer)
         X["FarePerPerson"] = X["Fare"] / X["FamilySize"]
@@ -90,13 +198,33 @@ class BinningFeatures(BaseEstimator, TransformerMixin):
     """Create binned features for Age and Fare"""
     
     def __init__(self):
+        """Initialize the BinningFeatures transformer."""
         self.fare_bins_ = None
     
     def fit(self, X, y=None):
+        """
+        Fit the transformer (no-op for this transformer).
+        
+        Args:
+            X (pd.DataFrame): Input features
+            y (array-like, optional): Target values
+            
+        Returns:
+            self: Returns the instance itself
+        """
         # Fit fare quantile bins on training data
         return self
     
     def transform(self, X):
+        """
+        Create binned age and fare features.
+        
+        Args:
+            X (pd.DataFrame): Input features containing 'Age' and 'Fare' columns
+            
+        Returns:
+            pd.DataFrame: Features with added 'AgeBin' and 'FareBin' columns
+        """
         X = X.copy()
         try:
             fare_bins_ = pd.qcut(X["Fare"].dropna(), 4, retbins=True, duplicates='drop')[1]
@@ -118,9 +246,28 @@ class InteractionFeatures(BaseEstimator, TransformerMixin):
     """Create interaction features"""
     
     def fit(self, X, y=None):
+        """
+        Fit the transformer (no-op for this transformer).
+        
+        Args:
+            X (pd.DataFrame): Input features
+            y (array-like, optional): Target values
+            
+        Returns:
+            self: Returns the instance itself
+        """
         return self
     
     def transform(self, X):
+        """
+        Create interaction features between different variables.
+        
+        Args:
+            X (pd.DataFrame): Input features
+            
+        Returns:
+            pd.DataFrame: Features with added interaction columns
+        """
         X = X.copy()
         X["Pclass*AgeBin"] = X["Pclass"] * X["AgeBin"].fillna(0).astype(int)
         X["Sex_Pclass"] = X["Sex"].astype(str) + "_" + X["Pclass"].astype(str)
@@ -131,9 +278,28 @@ class MissingValueIndicators(BaseEstimator, TransformerMixin):
     """Create missing value indicator features"""
     
     def fit(self, X, y=None):
+        """
+        Fit the transformer (no-op for this transformer).
+        
+        Args:
+            X (pd.DataFrame): Input features
+            y (array-like, optional): Target values
+            
+        Returns:
+            self: Returns the instance itself
+        """
         return self
     
     def transform(self, X):
+        """
+        Create binary indicators for missing values.
+        
+        Args:
+            X (pd.DataFrame): Input features
+            
+        Returns:
+            pd.DataFrame: Features with added missing value indicator columns
+        """
         X = X.copy()
         X["CabinMissing"] = X["Cabin"].isnull().astype(int)
         X["AgeMissing"] = X["Age"].isnull().astype(int)
@@ -144,6 +310,11 @@ class TitanicFeatureEngineer(BaseEstimator, TransformerMixin):
     """Complete feature engineering pipeline for Titanic dataset"""
     
     def __init__(self):
+        """
+        Initialize the complete feature engineering pipeline.
+        
+        Creates a pipeline with all feature engineering transformers.
+        """
         self.pipeline = Pipeline([
             ('title_extractor', TitleExtractor()),
             ('family_features', FamilySizeFeatures()),
@@ -156,18 +327,52 @@ class TitanicFeatureEngineer(BaseEstimator, TransformerMixin):
         ])
     
     def fit(self, X, y=None):
+        """
+        Fit the complete feature engineering pipeline.
+        
+        Args:
+            X (pd.DataFrame): Input features
+            y (array-like, optional): Target values
+            
+        Returns:
+            self: Returns the instance itself
+        """
         self.pipeline.fit(X, y)
         return self
     
     def transform(self, X):
+        """
+        Transform features using the complete pipeline.
+        
+        Args:
+            X (pd.DataFrame): Input features
+            
+        Returns:
+            pd.DataFrame: Transformed features
+        """
         return self.pipeline.transform(X)
     
     def fit_transform(self, X, y=None):
+        """
+        Fit and transform features in one step.
+        
+        Args:
+            X (pd.DataFrame): Input features
+            y (array-like, optional): Target values
+            
+        Returns:
+            pd.DataFrame: Transformed features
+        """
         return self.fit(X, y).transform(X)
 
 
 def create_modular_pipeline() -> Pipeline:
-    """Create a more modular pipeline where you can customize individual steps"""
+    """
+    Create a modular pipeline where individual steps can be customized.
+    
+    Returns:
+        Pipeline: Scikit-learn pipeline with all feature engineering steps
+    """
     return Pipeline([
         ('title_extractor', TitleExtractor()),
         ('family_features', FamilySizeFeatures()),
@@ -178,24 +383,3 @@ def create_modular_pipeline() -> Pipeline:
         ('interaction_features', InteractionFeatures()),
         ('missing_indicators', MissingValueIndicators()),
     ])
-
-
-if __name__ == "__main__":
-    # Example usage
-    import pandas as pd
-    
-    # Load data (example)
-    # df = pd.read_csv("data/raw/train.csv")
-    
-    # Option 1: Use the complete transformer
-    # engineer = TitanicFeatureEngineer()
-    # transformed_df = engineer.fit_transform(df)
-    
-    # Option 2: Use individual transformers in a pipeline
-    # pipeline = create_modular_pipeline()
-    # transformed_df = pipeline.fit_transform(df)
-    
-    # Option 3: Use legacy function
-    # transformed_df = extract_features(df)
-    
-    pass
