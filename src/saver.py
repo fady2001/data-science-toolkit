@@ -16,7 +16,7 @@ class Saver:
         """
         if os.path.exists(file_path) is False:
             os.makedirs(file_path)
-        file_path = Path(file_path) / f"{file_name}.csv"
+        file_path = Path(file_path) / f"{file_name}"
         dataset.to_csv(file_path, sep=",")
         logger.success(f"Dataset saved to {file_path}.")
         

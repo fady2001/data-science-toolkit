@@ -29,6 +29,11 @@ dependencies = [
     "typer",
     "seaborn>=0.13.2",
     "mlflow>=2.22.0",
+    "fastapi[standard]>=0.104.0",
+    "uvicorn>=0.24.0",
+    "pydantic>=2.5.0",
+    "python-multipart>=0.0.6",
+    "requests>=2.31.0",
 ]
 requires-python = "~=3.11.0"
 
