@@ -15,7 +15,7 @@ from src.globals import logger
 from src.preprocessor import Preprocessor
 from src.saver import Saver
 from src.tracking import log_and_register_model_with_mlflow, move_model_to_prod
-from src.training import train_RandomizedSearchCV
+from src.training import train, train_RandomizedSearchCV
 
 
 @hydra.main(config_path=".", config_name="config", version_base=None)
@@ -24,8 +24,7 @@ def main(cfg: DictConfig) -> None:
     logger.info("1. Load Training Data")
     # training data path
     train_path = os.path.join(
-        cfg["paths"]["data"]["raw_data"],
-        f"{cfg['names']['train_data']}.csv"
+        cfg["paths"]["data"]["raw_data"], f"{cfg['names']['train_data']}.csv"
     )
     train_df = load_dataset(train_path)
     print(f"Training data shape: {train_df.shape}")
@@ -39,8 +38,7 @@ def main(cfg: DictConfig) -> None:
     Saver.save_dataset_csv(
         dataset=feature_engineered_train,
         file_path=cfg["paths"]["data"]["interim_data"],
-        file_name=f"{cfg['names']['train_data']}.csv"
-,
+        file_name=f"{cfg['names']['train_data']}.csv",
     )
 
     ############################## 3. split data ##############################
@@ -80,22 +78,31 @@ def main(cfg: DictConfig) -> None:
     model, best_params = train_RandomizedSearchCV(model, cfg, X_processed_train, y_processed_train)
 
     ########################## 6. save model ##############################
+    best_model = RandomForestClassifier(
+        **best_params,
+    )
     logger.info("6. save model")
     full_pipeline = Pipeline(
         steps=[
             ("feature_engineering", feature_pipeline),
             ("preprocessor", preprocessor_pipeline.get_pipeline()),
-            ("model", model),
+            ("model", best_model),
         ]
+    )
+    train(
+        full_pipeline,
+        train_df.drop(columns=cfg["dataset"]["target_col"]),
+        train_df[cfg["dataset"]["target_col"]],
     )
     Saver.save_model(
         full_pipeline,
-        model_path= cfg["paths"]["models_parent_dir"],
-        model_name=cfg['names']['model_name'])
-    
+        model_path=cfg["paths"]["models_parent_dir"],
+        model_name=cfg["names"]["model_name"],
+    )
+
     ########################### 7. experiment tracking ##############################
     logger.info("7. experiment tracking")
-    if cfg["mlflow"]['is_tracking_enabled']:
+    if cfg["mlflow"]["is_tracking_enabled"]:
         mlflow.set_tracking_uri(cfg["mlflow"]["tracking_uri"])
         client = mlflow.tracking.MlflowClient()
         model_details, run_id = log_and_register_model_with_mlflow(
@@ -113,7 +120,7 @@ def main(cfg: DictConfig) -> None:
     ############################ 8. evaluate Model ##############################
     logger.info("8. evaluate Model")
     X_processed_val = preprocessor_pipeline.transform(X_val)
-    y_processed_val = y_val.values    
+    y_processed_val = y_val.values
     Saver.save_dataset_npy(
         dataset=X_processed_val,
         file_path=cfg["paths"]["data"]["processed_data"],
@@ -125,6 +132,7 @@ def main(cfg: DictConfig) -> None:
         file_name=cfg["names"]["target_name"],
     )
     evaluate(cfg=cfg, final_model=model, X_test=X_processed_val, y_test=y_processed_val)
+
 
 if __name__ == "__main__":
     main()
